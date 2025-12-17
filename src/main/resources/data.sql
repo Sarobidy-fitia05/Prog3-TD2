@@ -1,16 +1,13 @@
--- Insértion des données :
-INSERT INTO product (id, name, price, creation_datetime) VALUES
-    (1, 'Laptop Dell XPS', 4500.00, '2024-01-15 09:30:00'),
-    (2, 'iPhone 13', 5200.00, '2024-02-01 14:10:00'),
-    (3, 'Casque Sony WH1000', 890.50, '2024-02-10 16:45:00'),
-    (4, 'Clavier Logitech', 180.00, '2024-03-05 11:20:00'),
-    (5, 'Ecran Samsung 27\"', 1200.00, '2024-03-18 08:00:00');
+INSERT INTO dish (id, name, dish_type) VALUES
+                (1, 'Salade fraîche', 'START'),
+                (2, 'Poulet grillé', 'MAIN'),
+                (3, 'Riz aux légumes', 'MAIN'),
+                (4, 'Gâteau au chocolat', 'DESSERT'),
+                (5, 'Salade de fruits', 'DESSERT');
 
-INSERT INTO product_category (id, name, product_id) VALUES
-    (1, 'Informatique', 1),
-    (2, 'Téléphonie', 2),
-    (3, 'Audio', 3),
-    (4, 'Accessoires', 4),
-    (5, 'Informatique', 5),
-    (6, 'Bureau', 5),
-    (7, 'Mobile', 2);
+INSERT INTO ingredient (id, name, price, category, id_dish) VALUES
+                (1, 'Laitue', 800.00, 'VEGETABLE', 1),
+                (2, 'Tomate', 600.00, 'VEGETABLE', 1),
+                (3, 'Poulet', 4500.00, 'ANIMAL', 2),
+                (4, 'Chocolat', 3000.00, 'OTHER', 4),
+                (5, 'Beurre', 2500.00, 'DAIRY', 4);

@@ -1,14 +1,16 @@
--- table de produit
-CREATE TABLE product (
-    id INTEGER PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    price NUMERIC(12,2) NOT NULL,
-    creation_datetime TIMESTAMP WITHOUT TIME ZONE NOT NULL
-    );
+CREATE TYPE Category AS ENUM ('VEGETABLE', 'ANIMAL', 'MARINE', 'DAIRY', 'OTHER');
+CREATE TYPE Dish_type AS ENUL ('START', 'MAIN', 'DESSERT');
 
--- table de categorie de produit
-CREATE TABLE product_category (
-    id INTEGER PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    product_id INTEGER NOT NULL REFERENCES product(id) ON DELETE CASCADE
-    );
+
+CREATE TABLE ingredient (
+                            id int serial PRIMARY KEY,
+                            name varchar(250),
+                            price numeric,
+                            category Category,
+                            id_dish int CONSTRAINT fk_ingredient FOREIGN KEY (id_dish) REFERENCES dish(id)
+);
+CREATE TABLE dish (
+                      id int serial PRIMARY KEY,
+                      name VARCHAR(250),
+                      dish_type Dish_type
+);
