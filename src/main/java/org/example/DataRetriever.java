@@ -157,9 +157,6 @@ public class DataRetriever {
         }
     }
 
-    // ==========================
-    // FIND DISH BY INGREDIENT NAME
-    // ==========================
     public List<Dish> findDishsByIngredientName(String ingredientName) {
 
         String sql = """
@@ -193,9 +190,6 @@ public class DataRetriever {
         }
     }
 
-    // ==========================
-    // FIND INGREDIENTS BY CRITERIA
-    // ==========================
     public List<Ingredient> findIngredientsByCriteria(
             String ingredientName,
             CategoryEnum category,
@@ -256,4 +250,76 @@ public class DataRetriever {
             throw new RuntimeException(e);
         }
     }
+    public Dish findDishById(Integer id) throws SQLException {
+        String sql = "SELECT id, name, dish_cost, price FROM Dish WHERE id = ?";
+        try (Connection c = dbConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Integer dishId = rs.getInt("id");
+                    String name = rs.getString("name");
+                    // Supposons que la colonne coût s'appelle dish_cost (adapter si besoin)
+                    Double dishCost = rs.getObject("dish_cost") == null ? null : rs.getDouble("dish_cost");
+                    Double price = rs.getObject("price") == null ? null : rs.getDouble("price");
+                    Dish d = new Dish(dishId, name, dishCost, price);
+                    return d;
+                } else {
+                    return null;
+                }
+            }
+        }
+    }
+
+    public Dish saveDish(Dish dishToSave) throws SQLException {
+        if (dishToSave == null) throw new IllegalArgumentException("dishToSave ne peut pas être null");
+
+        if (dishToSave.getId() == null) {
+            String insert = "INSERT INTO Dish (name, dish_cost, price) VALUES (?, ?, ?)";
+            try (Connection c = dbConnection.getConnection();
+                 PreparedStatement ps = c.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, dishToSave.getName());
+                if (dishToSave.getDishCost() == null) ps.setNull(2, Types.DECIMAL);
+                else ps.setDouble(2, dishToSave.getDishCost());
+                if (dishToSave.getPrice() == null) ps.setNull(3, Types.DECIMAL);
+                else ps.setDouble(3, dishToSave.getPrice());
+                ps.executeUpdate();
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (keys.next()) {
+                        dishToSave.setId(keys.getInt(1));
+                    }
+                }
+                return dishToSave;
+            }
+        } else {
+            String update = "UPDATE Dish SET name = ?, dish_cost = ?, price = ? WHERE id = ?";
+            try (Connection c = dbConnection.getConnection();
+                 PreparedStatement ps = c.prepareStatement(update)) {
+                ps.setString(1, dishToSave.getName());
+                if (dishToSave.getDishCost() == null) ps.setNull(2, Types.DECIMAL);
+                else ps.setDouble(2, dishToSave.getDishCost());
+                if (dishToSave.getPrice() == null) ps.setNull(3, Types.DECIMAL);
+                else ps.setDouble(3, dishToSave.getPrice());
+                ps.setInt(4, dishToSave.getId());
+                int updated = ps.executeUpdate();
+                if (updated == 0) {
+                    String insert = "INSERT INTO Dish (name, dish_cost, price) VALUES (?, ?, ?)";
+                    try (PreparedStatement pin = c.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)) {
+                        pin.setString(1, dishToSave.getName());
+                        if (dishToSave.getDishCost() == null) pin.setNull(2, Types.DECIMAL);
+                        else pin.setDouble(2, dishToSave.getDishCost());
+                        if (dishToSave.getPrice() == null) pin.setNull(3, Types.DECIMAL);
+                        else pin.setDouble(3, dishToSave.getPrice());
+                        pin.executeUpdate();
+                        try (ResultSet keys = pin.getGeneratedKeys()) {
+                            if (keys.next()) {
+                                dishToSave.setId(keys.getInt(1));
+                            }
+                        }
+                    }
+                }
+                return dishToSave;
+            }
+        }
 }
+
