@@ -1,5 +1,7 @@
 import java.util.List;
 import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Dish {
     private Integer id;
@@ -7,6 +9,8 @@ public class Dish {
     private String name;
     private DishTypeEnum dishType;
     private List<Ingredient> ingredients;
+    private Map<Integer, Double> ingredientQuantities = new HashMap<>();
+    private Map<Integer, String> ingredientUnits = new HashMap<>();
 
     public Double getPrice() {
         return price;
@@ -18,12 +22,24 @@ public class Dish {
 
     public Double getDishCost() {
         double totalPrice = 0;
+        if (ingredients == null) {
+            return 0.0;
+        }
         for (int i = 0; i < ingredients.size(); i++) {
-            Double quantity = ingredients.get(i).getQuantity();
-            if(quantity == null) {
-                throw new RuntimeException("...");
+            Ingredient ingredient = ingredients.get(i);
+            Integer ingredientId = ingredient.getId();
+
+           Double quantity = ingredientQuantities.get(ingredientId);
+            if (quantity == null) {
+                quantity = ingredient.getQuantity();
+                if (quantity == null) {
+                    continue;
+                }
             }
-            totalPrice = totalPrice + ingredients.get(i).getPrice() * quantity;
+
+            if (ingredient.getPrice() != null) {
+                totalPrice = totalPrice + ingredient.getPrice() * quantity;
+            }
         }
         return totalPrice;
     }
@@ -37,7 +53,6 @@ public class Dish {
         this.dishType = dishType;
         this.ingredients = ingredients;
     }
-
 
     public Integer getId() {
         return id;
@@ -78,6 +93,35 @@ public class Dish {
         this.ingredients = ingredients;
     }
 
+    public Map<Integer, Double> getIngredientQuantities() {
+        return ingredientQuantities;
+    }
+
+    public void setIngredientQuantities(Map<Integer, Double> ingredientQuantities) {
+        this.ingredientQuantities = ingredientQuantities;
+    }
+
+    public Map<Integer, String> getIngredientUnits() {
+        return ingredientUnits;
+    }
+
+    public void setIngredientUnits(Map<Integer, String> ingredientUnits) {
+        this.ingredientUnits = ingredientUnits;
+    }
+
+    public void addIngredientQuantity(Integer ingredientId, Double quantity, String unit) {
+        this.ingredientQuantities.put(ingredientId, quantity);
+        this.ingredientUnits.put(ingredientId, unit);
+    }
+
+    public Double getIngredientQuantity(Integer ingredientId) {
+        return ingredientQuantities.get(ingredientId);
+    }
+
+    public String getIngredientUnit(Integer ingredientId) {
+        return ingredientUnits.get(ingredientId);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -100,6 +144,7 @@ public class Dish {
                 ", ingredients=" + ingredients +
                 '}';
     }
+
 
     public Double getGrossMargin() {
         if (price == null) {
