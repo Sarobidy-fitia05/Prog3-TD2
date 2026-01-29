@@ -104,13 +104,16 @@ public class Dish {
         return ingredients;
     }
 
-    public Dish(Integer id, Double price, String name, DishTypeEnum dishTypeEnum, List<Ingredient> ingredients) {
+    public Dish(Integer id, Double price, String name, DishTypeEnum dishTypeEnum, List<Ingredient> ingredients, List<StockMovement> stockMovementList, List<DishIngredient> dishIngredients) {
         this.id = id;
         this.price = price;
         this.name = name;
         this.dishTypeEnum = dishTypeEnum;
         this.ingredients = ingredients;
+        this.stockMovementList = stockMovementList;
+        this.dishIngredients = dishIngredients;
     }
+
     public Double getGrossMargin() {
         if (price == null) {
             throw new RuntimeException("Price is null");

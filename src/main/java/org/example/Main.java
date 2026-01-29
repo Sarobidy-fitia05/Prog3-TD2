@@ -9,181 +9,225 @@ public class Main {
     public static void main(String[] args) {
 
         DataRetriever dr = new DataRetriever();
+        System.out.println("=== TEST DE LA GESTION DES TABLES ===");
+        System.out.println("=====================================\n");
 
-        /* =========================
-           a) findDishById(1)
-           ========================= */
-      /*  System.out.println("a) findDishById(1)");
-        Dish dish1 = dr.findDishById(1);
-        System.out.println(dish1.getName());
-        dish1.getIngredients().forEach(i ->
-                System.out.println("- " + i.getName())
-        );*/
-
-        /* =========================
-           b) findDishById(999)
-           ========================= */
-       /* System.out.println("\nb) findDishById(999)");
+        // 1. Test des tables disponibles
+        System.out.println("1. TEST: Liste des tables disponibles maintenant");
+        System.out.println("-----------------------------------------------");
         try {
-            dr.findDishById(999);
-        } catch (RuntimeException e) {
-            System.out.println("Exception OK : " + e.getMessage());
-        }*/
-
-        /* =========================
-           c) findIngredients(page=2, size=2)
-           ========================= */
-       /* System.out.println("\nc) findIngredients(page=2, size=2)");
-        List<Ingredient> page2 = dr.findIngredients(2, 2);
-        page2.forEach(i -> System.out.println(i.getName()));*/
-
-        /* =========================
-           d) findIngredients(page=3, size=5)
-           ========================= */
-        /*System.out.println("\nd) findIngredients(page=3, size=5)");
-        List<Ingredient> page3 = dr.findIngredients(3, 5);
-        System.out.println("Résultat vide ? " + page3.isEmpty());*/
-
-        /* =========================
-           e) findDishsByIngredientName("eur")
-           ========================= */
-        /*System.out.println("\ne) findDishsByIngredientName(\"eur\")");
-        List<Dish> dishesByIng = dr.findDishsByIngredientName("eur");
-        dishesByIng.forEach(d -> System.out.println(d.getName()));*/
-
-        /* =========================
-           i) createIngredients
-           ========================= */
-        /*System.out.println("\ni) createIngredients");
-        Ingredient fromage = new Ingredient(
-                null,
-                "Fromage",
-                CategorieEnum.DAIRY,
-                1200.0,
-                null,
-                null,
-                null
-        );
-        Ingredient oignon = new Ingredient(
-                null,
-                "Oignon",
-                CategorieEnum.VEGETABLE,
-                500.0,
-                null,
-                null,
-                null);*/
-
-       /* List<Ingredient> created = dr.createIngredients(List.of(fromage, oignon));
-        created.forEach(i -> System.out.println(i.getName() + " créé"));*/
-
-        /* =========================
-           j) createIngredients avec doublon
-           ========================= */
-        /*System.out.println("\nj) createIngredients avec doublon");
-        try {
-            Ingredient carotte = new Ingredient(
-                    null,
-                    "Carotte",
-                     CategorieEnum.VEGETABLE,
-                    2000.0,
-                    null,
-                    null
-            );
-            Ingredient laitue = new Ingredient(
-                    null,
-                    "Laitue",
-                    CategorieEnum.VEGETABLE,
-                    2000.0,
-                    null,
-                    null,
-                    null
-            );
-            dr.createIngredients(List.of(carotte, laitue));
-        } catch (RuntimeException e) {
-            System.out.println("Exception OK : " + e.getMessage());
+            List<RestaurantTable> tablesDisponibles = dr.getAvailableTablesAtDateTime(LocalDateTime.now());
+            System.out.println("Tables disponibles: " + tablesDisponibles.size());
+            for (RestaurantTable table : tablesDisponibles) {
+                System.out.println("  - Table " + table.getNumber());
+            }
+        } catch (Exception e) {
+            System.out.println("ERREUR: " + e.getMessage());
         }
 
-        /* =========================
-           k) saveDish (nouveau)
-           ========================= */
-        /*System.out.println("\nk) saveDish - création");
-        Dish soupe = new Dish();
-        soupe.setName("Soupe de légumes");
-        soupe.setDishTypeEnum(DishTypeEnum.START);
-        soupe.setIngredients(List.of(oignon));
+        // 2. Test création d'une commande avec table
+        System.out.println("\n\n2. TEST: Création d'une commande avec table");
+        System.out.println("------------------------------------------");
+        try {
+            // Trouver une table
+            RestaurantTable table1 = dr.findTableByNumber(1);
 
-        dr.saveDish(soupe);
-        System.out.println("Plat créé : " + soupe.getName());*/
+            // Créer un plat commandé
+            Dish dish = dr.findDishById(1); // Supposons que le plat ID 1 existe
+            DishOrder dishOrder = new DishOrder();
+            dishOrder.setDish(dish);
+            dishOrder.setQuantity(2);
 
-        /* =========================
-           l) saveDish - ajout ingrédients
-           ========================= */
-        /*System.out.println("\nl) saveDish - ajout ingrédients");
-        Dish salade = dr.findDishById(1);
-        salade.setIngredients(List.of(oignon, fromage));
-        dr.saveDish(salade);
-        System.out.println("Salade mise à jour");*/
+            // Créer la commande
+            Order nouvelleCommande = new Order();
+            nouvelleCommande.setTotalHt(50.0);
+            nouvelleCommande.setTotalTtc(60.0);
+            nouvelleCommande.setCreationDatetime(LocalDateTime.now());
+            nouvelleCommande.setTable(table1);
+            nouvelleCommande.setArrivalDatetime(LocalDateTime.now().plusHours(1));
+            nouvelleCommande.setDepartureDatetime(LocalDateTime.now().plusHours(3));
+            nouvelleCommande.setDishOrders(List.of(dishOrder));
 
-        /* =========================
-           m) saveDish - suppression ingrédients
-           ========================= */
-        /*System.out.println("\nm) saveDish - suppression ingrédients");
-        salade.setIngredients(List.of(fromage));
-        dr.saveDish(salade);
-        System.out.println("Salade modifiée (reste fromage)");*/
+            // Sauvegarder
+            Order commandeSauvee = dr.saveOrder(nouvelleCommande);
+            System.out.println("SUCCÈS: Commande créée");
+            System.out.println("  Référence: " + commandeSauvee.getReference());
+            System.out.println("  Table: " + commandeSauvee.getTable().getNumber());
+            System.out.println("  Arrivée: " + commandeSauvee.getArrivalDatetime());
+            System.out.println("  Départ: " + commandeSauvee.getDepartureDatetime());
 
-
-        /* =========================
-   TD4 - Tests des stocks
-   ========================= */
-        System.out.println("\n=== TD4 - Gestion des stocks ===");
-
-// Test de getStockValueAt pour chaque ingrédient
-        Instant testTime = Instant.parse("2024-01-06T12:00:00Z");
-
-        System.out.println("\nStock à 2024-01-06 12:00:");
-        System.out.println("Laitue: " + dr.getStockValueAt(1, testTime) + " KG");
-        System.out.println("Tomate: " + dr.getStockValueAt(2, testTime) + " KG");
-        System.out.println("Poulet: " + dr.getStockValueAt(3, testTime) + " KG");
-        System.out.println("Chocolat: " + dr.getStockValueAt(4, testTime) + " KG");
-        System.out.println("Beurre: " + dr.getStockValueAt(5, testTime) + " KG");
-
-// Test de sauvegarde avec mouvement de stock
-        System.out.println("\nTest de saveIngredient avec mouvement:");
-        Ingredient laitueWithMovement = new Ingredient();
-        laitueWithMovement.setId(1); // Laitue
-        laitueWithMovement.setName("Laitue");
-
-// Création d'un mouvement de stock
-        StockMovement newMovement = new StockMovement(
-                11, // Nouvel ID
-                laitueWithMovement,
-                0.5,
-                "KG",
-                LocalDateTime.now()
-        );
-
-        laitueWithMovement.setStockMovementList(List.of(newMovement));
-        dr.saveIngredient(laitueWithMovement);
-        System.out.println("Mouvement de stock ajouté à Laitue");
-
-// Afficher les mouvements pour Laitue
-        System.out.println("\nMouvements de stock pour Laitue:");
-        List<StockMovement> movements = dr.getStockMovementsForIngredient(1);
-        for (StockMovement m : movements) {
-            System.out.println("- ID: " + m.getId() +
-                    ", Quantité: " + m.getQuantity() +
-                    " " + m.getUnit() +
-                    ", Date: " + m.getMovementDate());
+        } catch (Exception e) {
+            System.out.println("ÉCHEC: " + e.getMessage());
         }
 
-        /* =========================
-   ANNEXE 2 - Tests des commandes
-   ========================= */
-        System.out.println("\n=== ANNEXE 2 - Gestion des commandes ===");
+        // 3. Test table non disponible
+        System.out.println("\n\n3. TEST: Tentative de réservation table déjà prise");
+        System.out.println("---------------------------------------------------");
+        try {
+            // Essayer de réserver la même table aux mêmes heures
+            RestaurantTable table1 = dr.findTableByNumber(1);
 
+            Dish dish = dr.findDishById(2);
+            DishOrder dishOrder2 = new DishOrder();
+            dishOrder2.setDish(dish);
+            dishOrder2.setQuantity(1);
 
+            Order commandeConflict = new Order();
+            commandeConflict.setTotalHt(30.0);
+            commandeConflict.setTotalTtc(36.0);
+            commandeConflict.setCreationDatetime(LocalDateTime.now());
+            commandeConflict.setTable(table1);
+            commandeConflict.setArrivalDatetime(LocalDateTime.now().plusHours(1));
+            commandeConflict.setDepartureDatetime(LocalDateTime.now().plusHours(3));
+            commandeConflict.setDishOrders(List.of(dishOrder2));
 
+            dr.saveOrder(commandeConflict);
+            System.out.println("ÉCHEC: La commande aurait dû être refusée!");
+
+        } catch (RuntimeException e) {
+            System.out.println("SUCCÈS: Commande refusée comme prévu");
+            System.out.println("  Message d'erreur: " + e.getMessage());
+        }
+
+        // 4. Test suggestion tables alternatives
+        System.out.println("\n\n4. TEST: Suggestion de tables alternatives");
+        System.out.println("------------------------------------------");
+        try {
+            // Prendre une autre table
+            RestaurantTable table2 = dr.findTableByNumber(2);
+
+            Dish dish = dr.findDishById(1);
+            DishOrder dishOrder3 = new DishOrder();
+            dishOrder3.setDish(dish);
+            dishOrder3.setQuantity(3);
+
+            Order commandeTable2 = new Order();
+            commandeTable2.setTotalHt(75.0);
+            commandeTable2.setTotalTtc(90.0);
+            commandeTable2.setCreationDatetime(LocalDateTime.now());
+            commandeTable2.setTable(table2);
+            commandeTable2.setArrivalDatetime(LocalDateTime.now().plusHours(2));
+            commandeTable2.setDepartureDatetime(LocalDateTime.now().plusHours(4));
+            commandeTable2.setDishOrders(List.of(dishOrder3));
+
+            dr.saveOrder(commandeTable2);
+            System.out.println("SUCCÈS: Table 2 réservée pour 14h-16h");
+
+            // Maintenant essayer de prendre table 2 aux mêmes heures
+            Order commandeConflict2 = new Order();
+            commandeConflict2.setTotalHt(40.0);
+            commandeConflict2.setTotalTtc(48.0);
+            commandeConflict2.setCreationDatetime(LocalDateTime.now());
+            commandeConflict2.setTable(table2);
+            commandeConflict2.setArrivalDatetime(LocalDateTime.now().plusHours(2));
+            commandeConflict2.setDepartureDatetime(LocalDateTime.now().plusHours(4));
+            commandeConflict2.setDishOrders(List.of(dishOrder3));
+
+            dr.saveOrder(commandeConflict2);
+            System.out.println("ÉCHEC: La commande aurait dû être refusée!");
+
+        } catch (RuntimeException e) {
+            System.out.println("SUCCÈS: Commande refusée avec suggestions");
+            System.out.println("  Message: " + e.getMessage());
+        }
+
+        // 5. Test aucune table disponible
+        System.out.println("\n\n5. TEST: Aucune table disponible");
+        System.out.println("-------------------------------");
+        try {
+            // Prendre toutes les tables restantes
+            List<RestaurantTable> toutesTables = dr.getAvailableTablesAtDateTime(
+                    LocalDateTime.now().plusHours(5)
+            );
+
+            if (!toutesTables.isEmpty()) {
+                RestaurantTable derniereTable = toutesTables.get(0);
+
+                Order derniereCommande = new Order();
+                derniereCommande.setTotalHt(100.0);
+                derniereCommande.setTotalTtc(120.0);
+                derniereCommande.setCreationDatetime(LocalDateTime.now());
+                derniereCommande.setTable(derniereTable);
+                derniereCommande.setArrivalDatetime(LocalDateTime.now().plusHours(5));
+                derniereCommande.setDepartureDatetime(LocalDateTime.now().plusHours(7));
+
+                dr.saveOrder(derniereCommande);
+                System.out.println("SUCCÈS: Dernière table réservée");
+
+                // Essayer de réserver à nouveau
+                Order commandeImpossible = new Order();
+                commandeImpossible.setTotalHt(50.0);
+                commandeImpossible.setTotalTtc(60.0);
+                commandeImpossible.setCreationDatetime(LocalDateTime.now());
+                commandeImpossible.setTable(derniereTable);
+                commandeImpossible.setArrivalDatetime(LocalDateTime.now().plusHours(5));
+                commandeImpossible.setDepartureDatetime(LocalDateTime.now().plusHours(7));
+
+                dr.saveOrder(commandeImpossible);
+                System.out.println("ÉCHEC: La commande aurait dû être refusée!");
+            } else {
+                System.out.println("INFO: Aucune table disponible pour tester ce cas");
+            }
+
+        } catch (RuntimeException e) {
+            System.out.println("SUCCÈS: Commande refusée - aucune table disponible");
+            System.out.println("  Message: " + e.getMessage());
+        }
+
+        // 6. Test recherche de commande
+        System.out.println("\n\n6. TEST: Recherche d'une commande existante");
+        System.out.println("-------------------------------------------");
+        try {
+            // Créer une commande pour la rechercher
+            RestaurantTable table3 = dr.findTableByNumber(3);
+
+            Dish dish = dr.findDishById(1);
+            DishOrder dishOrder4 = new DishOrder();
+            dishOrder4.setDish(dish);
+            dishOrder4.setQuantity(1);
+
+            Order commandeTest = new Order();
+            commandeTest.setTotalHt(25.0);
+            commandeTest.setTotalTtc(30.0);
+            commandeTest.setCreationDatetime(LocalDateTime.now());
+            commandeTest.setTable(table3);
+            commandeTest.setArrivalDatetime(LocalDateTime.now().plusHours(6));
+            commandeTest.setDepartureDatetime(LocalDateTime.now().plusHours(8));
+            commandeTest.setDishOrders(List.of(dishOrder4));
+
+            Order commandeCree = dr.saveOrder(commandeTest);
+            String reference = commandeCree.getReference();
+
+            // Rechercher la commande
+            Order commandeTrouvee = dr.findOrderByReference(reference);
+            System.out.println("SUCCÈS: Commande trouvée");
+            System.out.println("  Référence: " + commandeTrouvee.getReference());
+            System.out.println("  Table: " + commandeTrouvee.getTable().getNumber());
+            System.out.println("  Total TTC: " + commandeTrouvee.getTotalTtc());
+
+        } catch (Exception e) {
+            System.out.println("ÉCHEC: " + e.getMessage());
+        }
+
+        // 7. Test commande sans table (doit échouer)
+        System.out.println("\n\n7. TEST: Commande sans table spécifiée");
+        System.out.println("--------------------------------------");
+        try {
+            Order commandeSansTable = new Order();
+            commandeSansTable.setTotalHt(20.0);
+            commandeSansTable.setTotalTtc(24.0);
+            commandeSansTable.setCreationDatetime(LocalDateTime.now());
+            // Pas de table définie!
+
+            dr.saveOrder(commandeSansTable);
+            System.out.println("ÉCHEC: La commande aurait dû être refusée!");
+
+        } catch (RuntimeException e) {
+            System.out.println("SUCCÈS: Commande refusée comme prévu");
+            System.out.println("  Message: " + e.getMessage());
+        }
+
+        System.out.println("\n=== FIN DES TESTS ===");
     }
 
 }

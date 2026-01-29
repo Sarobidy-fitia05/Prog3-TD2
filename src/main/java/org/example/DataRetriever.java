@@ -379,17 +379,19 @@ public class DataRetriever {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
+                // Créer un Ingredient d'abord
                 Ingredient ingredient = new Ingredient();
                 ingredient.setId(rs.getInt("ingredient_id"));
                 ingredient.setName(rs.getString("ingredient_name"));
 
-                StockMovement movement = new StockMovement(
-                        rs.getInt("id"),
-                        ingredient,
-                        rs.getDouble("quantity"),
-                        rs.getString("unit"),
-                        rs.getTimestamp("creation_datetime").toLocalDateTime()
-                );
+                // Créer le StockMovement avec tous les arguments
+                StockMovement movement = new StockMovement();
+                movement.setId(rs.getInt("id"));
+                movement.setIngredient(ingredient);
+                movement.setQuantity(rs.getDouble("quantity"));
+                movement.setUnit(rs.getString("unit"));
+                movement.setMovementDate(rs.getTimestamp("creation_datetime").toLocalDateTime());
+
                 movements.add(movement);
             }
 
@@ -558,8 +560,15 @@ public class DataRetriever {
                         table.setNumber(rs.getInt("table_number"));
                         order.setTable(table);
 
-                        order.setArrivalDatetime(rs.getTimestamp("arrival_datetime").toLocalDateTime());
-                        order.setDepartureDatetime(rs.getTimestamp("departure_datetime").toLocalDateTime());
+                        Timestamp arrivalTimestamp = rs.getTimestamp("arrival_datetime");
+                        Timestamp departureTimestamp = rs.getTimestamp("departure_datetime");
+
+                        if (arrivalTimestamp != null) {
+                            order.setArrivalDatetime(arrivalTimestamp.toLocalDateTime());
+                        }
+                        if (departureTimestamp != null) {
+                            order.setDepartureDatetime(departureTimestamp.toLocalDateTime());
+                        }
                     }
                 }
 
@@ -621,11 +630,11 @@ public class DataRetriever {
         try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
             ps.setInt(1, tableId);
             ps.setTimestamp(2, Timestamp.valueOf(departureTime));
-            ps.setTimestamp(3, arrivalTime);
-            ps.setTimestamp(4, arrivalTime);
-            ps.setTimestamp(5, departureTime);
-            ps.setTimestamp(6, arrivalTime);
-            ps.setTimestamp(7, departureTime);
+            ps.setTimestamp(3, Timestamp.valueOf(arrivalTime));
+            ps.setTimestamp(4, Timestamp.valueOf(arrivalTime));
+            ps.setTimestamp(5, Timestamp.valueOf(departureTime));
+            ps.setTimestamp(6, Timestamp.valueOf(arrivalTime));
+            ps.setTimestamp(7, Timestamp.valueOf(departureTime));
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -659,11 +668,11 @@ public class DataRetriever {
 
         try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
             ps.setTimestamp(1, Timestamp.valueOf(departureTime));
-            ps.setTimestamp(2, arrivalTime);
-            ps.setTimestamp(3, arrivalTime);
-            ps.setTimestamp(4, departureTime);
-            ps.setTimestamp(5, arrivalTime);
-            ps.setTimestamp(6, departureTime);
+            ps.setTimestamp(2, Timestamp.valueOf(arrivalTime));
+            ps.setTimestamp(3, Timestamp.valueOf(arrivalTime));
+            ps.setTimestamp(4, Timestamp.valueOf(departureTime));
+            ps.setTimestamp(5, Timestamp.valueOf(arrivalTime));
+            ps.setTimestamp(6, Timestamp.valueOf(departureTime));
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {

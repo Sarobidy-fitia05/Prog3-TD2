@@ -8,6 +8,9 @@ public class RestaurantTable {
     private Integer number;
     private List<Order> orders;
 
+    public RestaurantTable() {
+    }
+
     @Override
     public String toString() {
         return "RestaurantTable{" +

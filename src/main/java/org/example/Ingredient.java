@@ -12,6 +12,7 @@ public class Ingredient {
     private Double quantity;
     private List<StockMovement> stockMovementList;
 
+
     public void setStockMovementList(List<StockMovement> stockMovementList) {
         this.stockMovementList = stockMovementList;
     }
