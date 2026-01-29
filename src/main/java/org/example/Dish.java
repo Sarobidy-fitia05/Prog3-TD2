@@ -9,6 +9,27 @@ public class Dish {
     private String name;
     private DishTypeEnum dishTypeEnum;
     private List<Ingredient> ingredients;
+    private List<StockMovement> stockMovementList;
+
+    public List<StockMovement> getStockMovementList() {
+        return stockMovementList;
+    }
+
+
+    public List<DishIngredient> getDishIngredients() {
+        return dishIngredients;
+    }
+
+    public void setStockMovementList(List<StockMovement> stockMovementList) {
+        this.stockMovementList = stockMovementList;
+    }
+
+    public void setDishIngredients(List<DishIngredient> dishIngredients) {
+        this.dishIngredients = dishIngredients;
+    }
+
+    private List<DishIngredient> dishIngredients;
+
 
     public Dish() {
     }

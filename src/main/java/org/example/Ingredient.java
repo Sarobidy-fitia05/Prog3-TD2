@@ -1,5 +1,6 @@
 package org.example;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Ingredient {
@@ -9,6 +10,25 @@ public class Ingredient {
     private Double price;
     private Dish dish;
     private Double quantity;
+    private List<StockMovement> stockMovementList;
+
+    public void setStockMovementList(List<StockMovement> stockMovementList) {
+        this.stockMovementList = stockMovementList;
+    }
+
+    public Ingredient(Integer id, String name, CategorieEnum categorieEnum, Double price, Dish dish, Double quantity, List<StockMovement> stockMovementList) {
+        this.id = id;
+        this.name = name;
+        this.categorieEnum = categorieEnum;
+        this.price = price;
+        this.dish = dish;
+        this.quantity = quantity;
+        this.stockMovementList = stockMovementList;
+    }
+
+    public List<StockMovement> getStockMovementList() {
+        return stockMovementList;
+    }
 
     public Ingredient() {
     }
