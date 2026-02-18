@@ -740,4 +740,29 @@ public class DataRetriever {
             throw new RuntimeException("Erreur lors de la recherche de l'ingrédient", e);
         }
     }
+    public Double getDishCost(Integer dishId) {
+        String sql = """
+        SELECT SUM(di.quantity * i.price) AS total_cost
+        FROM dish_ingredient di
+        JOIN ingredient i ON di.ingredient_id = i.id
+        WHERE di.dish_id = ?
+    """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, dishId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // On récupère directement le résultat final calculé par la DB
+                    return rs.getDouble("total_cost");
+                }
+            }
+            return 0.0;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du calcul du coût du plat (Push-down)", e);
+        }
+    }
 }

@@ -257,6 +257,63 @@ public class Main {
             System.err.println("Le test a échoué :");
             e.printStackTrace();
         }
+        Integer testDishId = 1;
+        double expectedTotal = 950.0; // Basé sur votre calcul SQL (800 + 150)
+
+        // 2. Initialisation du service
+        DataRetriever retriever = new DataRetriever();
+
+        try {
+            System.out.println("=== TEST : getDishCost (Push-down) ===");
+
+            // 3. Appel de la méthode
+            Double actualCost = retriever.getDishCost(testDishId);
+
+            // 4. Comparaison et Affichage
+            System.out.println("ID du Plat        : " + testDishId);
+            System.out.println("Coût attendu (SQL): " + expectedTotal);
+            System.out.println("Coût obtenu (Java): " + actualCost);
+
+            if (actualCost != null && Math.abs(actualCost - expectedTotal) < 0.001) {
+                System.out.println("\n SUCCÈS : Le résultat Java correspond parfaitement à PostgreSQL !");
+            } else {
+                System.out.println("\n ÉCHEC : Les résultats ne correspondent pas.");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erreur durant l'exécution du test :");
+            e.printStackTrace();
+        }
+
+
+        // 2 )a . teste pour l'exo2 a
+        Integer testDishId = 1;
+        double expectedTotal = 950.0; // Basé sur votre calcul SQL (800 + 150)
+
+        // 2. Initialisation du service
+        DataRetriever retriever = new DataRetriever();
+
+        try {
+            System.out.println("=== TEST : getDishCost (Push-down) ===");
+
+            // 3. Appel de la méthode
+            Double actualCost = retriever.getDishCost(testDishId);
+
+            // 4. Comparaison et Affichage
+            System.out.println("ID du Plat        : " + testDishId);
+            System.out.println("Coût attendu (SQL): " + expectedTotal);
+            System.out.println("Coût obtenu (Java): " + actualCost);
+
+            if (actualCost != null && Math.abs(actualCost - expectedTotal) < 0.001) {
+                System.out.println("\n SUCCÈS : Le résultat Java correspond parfaitement à PostgreSQL !");
+            } else {
+                System.out.println("\n ÉCHEC : Les résultats ne correspondent pas.");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Erreur durant l'exécution du test :");
+            e.printStackTrace();
+        }
     }
 
 }
