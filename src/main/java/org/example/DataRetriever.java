@@ -4,7 +4,9 @@ import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DataRetriever {
 
@@ -326,42 +328,38 @@ public class DataRetriever {
             throw new RuntimeException("Erreur lors de la sauvegarde de l'ingrédient", e);
         }
     }
-
     public double getStockValueAt(Integer ingredientId, Instant t) {
+        // On ajoute le GROUP BY et le CASE WHEN pour gérer le type de mouvement
         String sql = """
-        WITH initial AS (
-            SELECT quantity 
-            FROM initial_stock 
-            WHERE id_ingredient = ?
-        ),
-        movements AS (
-            SELECT 
-                COALESCE(SUM(CASE WHEN type = 'IN' THEN quantity ELSE -quantity END), 0) as total_change
-            FROM stock_movement 
-            WHERE id_ingredient = ? 
-            AND creation_datetime <= ?
-        )
-        SELECT 
-            COALESCE((SELECT quantity FROM initial), 0) 
-            + COALESCE((SELECT total_change FROM movements), 0) as current_stock
+        SELECT
+            SUM(
+                CASE
+                    WHEN sm.movement_type = 'OUT' THEN -sm.quantity
+                    ELSE sm.quantity
+                END
+            ) AS actual_quantity
+        FROM stock_movement sm
+        WHERE sm.ingredient_id = ?
+          AND sm.movement_date <= ?
+        GROUP BY sm.ingredient_id, sm.unit
     """;
 
-        try (PreparedStatement ps = DBConnection.getConnection().prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, ingredientId);
-            ps.setInt(2, ingredientId);
-            ps.setTimestamp(3, Timestamp.from(t));
+            ps.setTimestamp(2, Timestamp.from(t));
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return rs.getDouble("current_stock");
+                return rs.getDouble("actual_quantity");
             }
             return 0.0;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur lors du calcul du stock", e);
+            throw new RuntimeException("Erreur SQL", e);
         }
     }
-
     public List<StockMovement> getStockMovementsForIngredient(Integer ingredientId) {
         String sql = """
         SELECT sm.id, sm.quantity, sm.type, sm.unit, sm.creation_datetime,
