@@ -793,56 +793,54 @@ public class DataRetriever {
             throw new RuntimeException("Erreur lors du calcul de la marge brute", e);
         }
     }
-    public Map<String, List<Double>> getStockEvolution(String periodicity, LocalDate start, LocalDate end) {
-        // On adapte la granularité selon l'entrée (day, week, month)
+    public Map<Integer, List<Double>> getStockEvolutionById(String periodicity, LocalDate start, LocalDate end) {
         String intervalUnit = periodicity.equalsIgnoreCase("JOUR") ? "day" :
                 periodicity.equalsIgnoreCase("SEMAINE") ? "week" : "month";
 
+        // On sélectionne i.id au lieu de i.name
         String sql = """
         WITH date_range AS (
-            -- Génère toutes les dates de l'intervalle pour ne pas avoir de "trous"
-            SELECT generate_series(?::timestamp, ?::timestamp, ('1 ' || ?)::interval) as period
+            SELECT generate_series(?::timestamp, ?::timestamp, ('1 ' || ?)::interval)::date as period
         ),
         stock_summary AS (
             SELECT 
-                i.name as ingredient_name,
-                date_trunc(?, sm.movement_date) as period,
-                SUM(CASE WHEN sm.movement_type = 'OUT' THEN -sm.quantity ELSE sm.quantity END) as net_change
-            FROM ingredient i
-            LEFT JOIN stock_movement sm ON i.id = sm.ingredient_id
-            WHERE sm.movement_date BETWEEN ? AND ?
-            GROUP BY i.name, 2
+                ingredient_id,
+                date_trunc(?, movement_date)::date as period,
+                SUM(CASE WHEN movement_type = 'OUT' THEN -quantity ELSE quantity END) as net_change
+            FROM stock_movement
+            WHERE movement_date BETWEEN ? AND ?
+            GROUP BY ingredient_id, 2
         )
         SELECT 
-            i.name,
+            i.id,
             dr.period,
             COALESCE(ss.net_change, 0) as quantity
         FROM ingredient i
         CROSS JOIN date_range dr
-        LEFT JOIN stock_summary ss ON i.name = ss.ingredient_name AND dr.period = ss.period
-        ORDER BY i.name, dr.period;
+        LEFT JOIN stock_summary ss ON i.id = ss.ingredient_id AND dr.period = ss.period
+        ORDER BY i.id, dr.period;
     """;
 
-        Map<String, List<Double>> results = new LinkedHashMap<>();
+        Map<Integer, List<Double>> results = new LinkedHashMap<>();
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setObject(1, start);
-            ps.setObject(2, end);
+            ps.setObject(1, java.sql.Date.valueOf(start));
+            ps.setObject(2, java.sql.Date.valueOf(end));
             ps.setString(3, intervalUnit);
             ps.setString(4, intervalUnit);
-            ps.setObject(5, start);
-            ps.setObject(6, end);
+            ps.setObject(5, java.sql.Date.valueOf(start));
+            ps.setObject(6, java.sql.Timestamp.valueOf(end.atTime(23, 59, 59)));
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                String name = rs.getString("name");
+                Integer id = rs.getInt("id"); // On récupère l'ID
                 double qty = rs.getDouble("quantity");
-                results.computeIfAbsent(name, k -> new ArrayList<>()).add(qty);
+                results.computeIfAbsent(id, k -> new ArrayList<>()).add(qty);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erreur stats stock", e);
+            throw new RuntimeException("Erreur stats stock par ID", e);
         }
         return results;
     }
