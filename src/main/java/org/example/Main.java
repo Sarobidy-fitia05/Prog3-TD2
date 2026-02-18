@@ -253,6 +253,7 @@ public class Main {
                 System.out.println("Attention : Le résultat diffère (Vérifiez les mouvements 'OUT')");
             }
 
+<<<<<<< HEAD
         } catch (Exception e) {
             System.err.println("Le test a échoué :");
             e.printStackTrace();
@@ -314,6 +315,12 @@ public class Main {
             System.err.println("Erreur durant l'exécution du test :");
             e.printStackTrace();
         }
+=======
+        } catch (Exception e) {
+            System.err.println("Le test a échoué :");
+            e.printStackTrace();
+        }
+>>>>>>> 172875cfa01461927139830bbde12e475c010b49
     }
 
 }
