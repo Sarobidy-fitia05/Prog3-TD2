@@ -317,10 +317,15 @@ public class Main {
             System.err.println("Erreur durant l'exécution du test :");
             e.printStackTrace();
         }
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 943be7f60104159c3fd364f48a745e75e89ee546
         } catch (Exception e) {
             System.err.println("Le test a échoué :");
             e.printStackTrace();
         }
+<<<<<<< HEAD
 
 
     DataRetriever retriever = new DataRetriever();
@@ -365,6 +370,9 @@ public class Main {
         System.err.println("Erreur lors de l'exécution du test : ");
         e.printStackTrace();
     }
+=======
+>>>>>>> 172875cfa01461927139830bbde12e475c010b49
+>>>>>>> 943be7f60104159c3fd364f48a745e75e89ee546
     }
 
 }
