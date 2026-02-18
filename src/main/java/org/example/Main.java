@@ -2,6 +2,8 @@ package org.example;
 
 import java.time.*;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -315,12 +317,54 @@ public class Main {
             System.err.println("Erreur durant l'exécution du test :");
             e.printStackTrace();
         }
-=======
         } catch (Exception e) {
             System.err.println("Le test a échoué :");
             e.printStackTrace();
         }
->>>>>>> 172875cfa01461927139830bbde12e475c010b49
+
+
+    DataRetriever retriever = new DataRetriever();
+
+    // Test sur la Salade fraîche (ID 1)
+
+    // 1. Définition de l'intervalle basé sur VOS données (2024)
+    LocalDate startDate = LocalDate.of(2024, 1, 4);
+    LocalDate endDate = LocalDate.of(2024, 1, 6);
+    String periodicity = "JOUR";
+
+        try {
+        System.out.println("=== STATISTIQUES D'ÉVOLUTION DU STOCK (Database-side) ===");
+        System.out.println("Période : " + startDate + " au " + endDate);
+        System.out.println();
+
+        // 2. Appel de la méthode
+        Map<String, List<Double>> stats = retriever.getStockEvolution(periodicity, startDate, endDate);
+
+        // 3. Construction de l'en-tête dynamique
+        System.out.print(String.format("%-20s", "Nom Ingrédient"));
+        List<LocalDate> allDates = startDate.datesUntil(endDate.plusDays(1)).collect(Collectors.toList());
+        for (LocalDate date : allDates) {
+            System.out.print(String.format("| %-12s", date));
+        }
+        System.out.println("\n" + "=".repeat(20 + (allDates.size() * 15)));
+
+        // 4. Affichage des lignes
+        if (stats.isEmpty()) {
+            System.out.println("Aucune donnée trouvée pour cette période.");
+        } else {
+            stats.forEach((name, values) -> {
+                System.out.print(String.format("%-20s", name));
+                for (Double val : values) {
+                    System.out.print(String.format("| %-12.2f", val));
+                }
+                System.out.println();
+            });
+        }
+
+    } catch (Exception e) {
+        System.err.println("Erreur lors de l'exécution du test : ");
+        e.printStackTrace();
+    }
     }
 
 }

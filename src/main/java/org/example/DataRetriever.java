@@ -2,11 +2,9 @@ package org.example;
 
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DataRetriever {
 
@@ -764,5 +762,88 @@ public class DataRetriever {
         } catch (SQLException e) {
             throw new RuntimeException("Erreur lors du calcul du coût du plat (Push-down)", e);
         }
+    }
+
+    public Double getGrossMargin(Integer dishId) {
+        // On utilise COALESCE pour gérer les prix de vente vides (null)
+        String sql = """
+        SELECT 
+            d.sale_price - SUM(di.quantity * i.price) AS gross_margin
+        FROM dish d
+        JOIN dish_ingredient di ON d.id = di.dish_id
+        JOIN ingredient i ON di.ingredient_id = i.id
+        WHERE d.id = ?
+        GROUP BY d.id, d.sale_price
+    """;
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, dishId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // Si sale_price est NULL, getDouble retournera 0.0
+                    return rs.getDouble("gross_margin");
+                }
+            }
+            return 0.0;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors du calcul de la marge brute", e);
+        }
+    }
+    public Map<String, List<Double>> getStockEvolution(String periodicity, LocalDate start, LocalDate end) {
+        // On adapte la granularité selon l'entrée (day, week, month)
+        String intervalUnit = periodicity.equalsIgnoreCase("JOUR") ? "day" :
+                periodicity.equalsIgnoreCase("SEMAINE") ? "week" : "month";
+
+        String sql = """
+        WITH date_range AS (
+            -- Génère toutes les dates de l'intervalle pour ne pas avoir de "trous"
+            SELECT generate_series(?::timestamp, ?::timestamp, ('1 ' || ?)::interval) as period
+        ),
+        stock_summary AS (
+            SELECT 
+                i.name as ingredient_name,
+                date_trunc(?, sm.movement_date) as period,
+                SUM(CASE WHEN sm.movement_type = 'OUT' THEN -sm.quantity ELSE sm.quantity END) as net_change
+            FROM ingredient i
+            LEFT JOIN stock_movement sm ON i.id = sm.ingredient_id
+            WHERE sm.movement_date BETWEEN ? AND ?
+            GROUP BY i.name, 2
+        )
+        SELECT 
+            i.name,
+            dr.period,
+            COALESCE(ss.net_change, 0) as quantity
+        FROM ingredient i
+        CROSS JOIN date_range dr
+        LEFT JOIN stock_summary ss ON i.name = ss.ingredient_name AND dr.period = ss.period
+        ORDER BY i.name, dr.period;
+    """;
+
+        Map<String, List<Double>> results = new LinkedHashMap<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, start);
+            ps.setObject(2, end);
+            ps.setString(3, intervalUnit);
+            ps.setString(4, intervalUnit);
+            ps.setObject(5, start);
+            ps.setObject(6, end);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String name = rs.getString("name");
+                double qty = rs.getDouble("quantity");
+                results.computeIfAbsent(name, k -> new ArrayList<>()).add(qty);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur stats stock", e);
+        }
+        return results;
     }
 }
